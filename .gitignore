@@ -1,4 +1,5 @@
-#files
+pattern/*
+autom4te*
 *.o
 *.log
 

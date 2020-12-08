@@ -5,7 +5,7 @@
 #include <unistd.h>  /* getopt */
 #include <ctype.h>  /* isprint */
 #include <dirent.h>
-#include "minini/minIni.h"
+#include "minIni.h"
 #include "common.h"
 
 MODE_T ModeT[]= {
