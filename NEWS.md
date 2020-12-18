@@ -1,1 +1,4 @@
-Initial work
+
+# NEWS
+
+* Initial work
