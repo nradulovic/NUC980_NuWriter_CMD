@@ -7,6 +7,9 @@
 #include <dirent.h>
 #include "minIni.h"
 #include "common.h"
+#include "nw/result.h"
+
+#define NUDATA_PATH "/usr/local/share"
 
 MODE_T ModeT[]= {
 	{MODE_SDRAM,		"SDRAM"		},
@@ -35,8 +38,6 @@ MODE_T RunT[]= {
 	{0,		NULL		},
 };
 
-char inifile[256];
-
 int check_strlen(const struct dirent *dir)
 {
 	if(strlen(dir->d_name)>5)
@@ -45,16 +46,19 @@ int check_strlen(const struct dirent *dir)
 		return 0;
 }
 
+struct ParsingIniResult NW__RESULT(int);
 /* Using globel varible, nudata */
-int ParsingIni(void)
+struct ParsingIniResult  ParsingIni(const char * inifile)
 {
+    struct ParsingIniResult result;
 	MODE_T * mode;
 	char str[256],str2[100];
 	long n,IsYes;
 	int i,idx;
 
 	nudata.user_def = (INFO_T *)malloc(sizeof(INFO_T));
-	/* Parsing [RUN] */
+	
+    /* Parsing [RUN] */
 	n = ini_gets("RUN", "pack", "dummy", str, sizearray(str), inifile);
 	if(n==3) {
 		pack.enable_pack=1;
@@ -75,7 +79,9 @@ int ParsingIni(void)
 	}
 	if(mode->pName==NULL || n==0) {
 		fprintf(stderr,"Check [RUN] mode setting\n");
-		return -1;
+        NW__RESULT__SET(&result, 0, 1);
+
+        return result;
 	} else {
 		nudata.mode.id=mode->id;
 		nudata.mode.pName =mode->pName;
@@ -106,10 +112,6 @@ int ParsingIni(void)
 			n = ini_getl(ModeT[nudata.mode.id].pName, "dtb_addr", -1, inifile);
 			nudata.sdram->dtb_addr  = n;
 		}
-#if 0
-		fprintf(stderr,"nudata.sdram->exe_addr=0x%08x\n",nudata.sdram->exe_addr);
-		fprintf(stderr,"nudata.sdram->dtb_addr=0x%08x\n",nudata.sdram->dtb_addr);
-#endif
 	} else { 	/* Parsing [SPINAND],[SPINOR],[SD],[NAND] */
 
 		/* Parsing run */
@@ -126,7 +128,8 @@ int ParsingIni(void)
 		nudata.image_num = n;
 		if(nudata.image_num==0) {
 			fprintf(stderr,"Set image number\n");
-			return -1;
+            NW__RESULT__SET(&result, 0, 1);
+			return result;
 		}
 		for(i=0; i<nudata.image_num; i++) {
 			sprintf(str2,"image%d_type",i);
@@ -144,7 +147,8 @@ int ParsingIni(void)
 			if(mode->pName==NULL) {
 				fprintf(stderr,"Cannot find image type\n");
 				printf("============================>Cannot find image type\n");
-				return -1;
+                NW__RESULT__SET(&result, 0, 1);
+				return result;
 			}
 
 			nudata.image[i].image_idx=idx;
@@ -153,11 +157,13 @@ int ParsingIni(void)
 			n = ini_gets(ModeT[nudata.mode.id].pName, str2, "dummy", str, sizearray(str), inifile);
 			if(n==0) {
 				fprintf(stderr,"Cannot find image%d\n",i);
-				return -1;
+                NW__RESULT__SET(&result, 0, 1);
+				return result;
 			}
 			if( access( str, F_OK ) == -1 ) {
 				fprintf(stderr,"Cannot access image%d [path:%s]\n",i,str);
-				return -1;
+                NW__RESULT__SET(&result, 0, 1);
+				return result;
 			}
 			strcpy(nudata.image[i].image_path,str);
 
@@ -307,7 +313,8 @@ int ParsingIni(void)
 
 
 	MSG_DEBUG("ParsingIni END\n");
-	return 0;
+    NW__RESULT__SET(&result, 0, 0);
+    return result;
 }
 
 int main(int argc, char **argv)
@@ -316,22 +323,11 @@ int main(int argc, char **argv)
 	char *path;
 	int cmd_opt = 0;
 
-	//memcpy(Data_Path,argv[0],strlen(argv[0]));
-	//path=strrchr(Data_Path,'/');
-	//fprintf(stderr,"path=%s\n",path);
-	//printf("syscfg_dir=%s\n",syscfg_dir);
 	csg_usb_index = 1;
 	enable_all_device = 0;
-
-#ifndef _WIN32
-	//sprintf(Data_Path,"%s",NUDATA_PATH);
-	//fprintf(stderr,"Data_Path=%s\n",Data_Path);
-#else
-	sprintf(Data_Path,"%s%s",Data_Path,"/nudata");
-#endif
+    printf("app data path %s\n", NUDATA_PATH);
 
 	while(1) {
-		//fprintf(stderr, "proces index:%d\n", optind);
 		cmd_opt = getopt(argc, argv, "h");
 
 		/* End condition always first */
@@ -368,8 +364,12 @@ int main(int argc, char **argv)
 		fprintf(stderr,"Cannot access %s ini file\n",argv[1]);
 		return 0;
 	}
-	strcpy(inifile,argv[1]);
-	if(ParsingIni()<0) {
+
+    struct ParsingIniResult result;
+
+    result = ParsingIni(argv[1]);
+	
+    if(NW__RESULT__ERROR(&result) != 0) {
 		return -1;
 	}
 
@@ -390,7 +390,7 @@ int main(int argc, char **argv)
 			if(enable_all_device==1) {
 				printf("Burn device %d ...\n",csg_usb_index);
 			}
-			if(ParseFlashType()< 0) {
+			if(ParseFlashType(NUDATA_PATH)< 0) {
 				printf("Failed\n");
 				NUC_CloseUsb();
 				libusb_exit(NULL);

@@ -49,7 +49,7 @@ char * read_xusb_name(char * FilePath)
 	fclose(fp);
 	return (char *)name;
 }
-int init_xusb(void)
+int init_xusb(const char * data_path)
 {
 
 	int ret=0;
@@ -77,7 +77,7 @@ int init_xusb(void)
 		goto EXIT;
 	}
 
-	sprintf(XUSB,"%s/%s",NUDATA_PATH,read_xusb_name(nudata.ddr_path));
+	sprintf(XUSB,"%s/%s",data_path,read_xusb_name(nudata.ddr_path));
 	xbuf=load_xusb(XUSB,&xlen);
 	MSG_DEBUG("XUSB=%s,len=%d\n",XUSB,xlen);
 	if(xbuf==NULL) {
@@ -102,10 +102,10 @@ EXIT:
 	return ret;
 }
 
-int ParseFlashType(void)
+int ParseFlashType(const char * data_path)
 {
 	int ret;
-	if((ret=init_xusb())<0) {
+	if((ret=init_xusb(data_path))<0) {
 		printf("initail xusb failed %d\n",ret);
 		return -1;
 	}

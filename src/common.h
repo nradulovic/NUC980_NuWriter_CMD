@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>  /* sleep/usleep*/
 /* change if your libusb.h is located elswhere */
-#include <libusb-1.0/libusb.h>
+#include <libusb.h>
 #include "config.h"
 #include "Serial.h"
 
@@ -139,8 +139,8 @@ extern int DDRtoDevice(unsigned char *buf,unsigned int len);
 int InfoFromDevice(void);
 
 /* parse.c */
-extern int ParseFlashType(void);
-extern int init_xusb(void);
+extern int ParseFlashType(const char * data_path);
+extern int init_xusb(const char * data_path);
 
 /* UXmodem.c */
 extern int UXmodem_SDRAM(void);

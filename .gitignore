@@ -1,24 +1,2 @@
 pattern/*
-autom4te*
-*.o
-*.log
 
-.deps/
-autom4te.cache/
-
-stamp-h1
-nuwriter
-stamp-h1
-missing
-depcomp
-install-sh
-src/nuburner
-Makefile.in
-aclocal.m4
-config.guess
-config.h
-config.h.in
-config.log
-config.status
-Makefile
-configure
