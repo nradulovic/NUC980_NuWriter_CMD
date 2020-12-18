@@ -34,3 +34,10 @@ Install the application:
 
     make install
 
+
+## Creating Eclipse project
+
+Execute cmake to generate Eclipse project files:
+
+    cmake -G"Eclipse CDT4 - Unix Makefiles" -DCMAKE_ECLIPSE_GENERATE_SOURCE_PROJECT=TRUE <path_to_source>
+
