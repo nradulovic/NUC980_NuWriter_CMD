@@ -10,7 +10,7 @@
 /* change if your libusb.h is located elswhere */
 #include <libusb.h>
 #include "config.h"
-#include "Serial.h"
+#include "serial.h"
 
 #define SPINAND_ENV_LEN 0x20000
 
@@ -121,8 +121,8 @@ NORBOOT_MMC_HEAD mmc_head;
 #endif
 
 /* load_file.c */
-extern char* load_ddr(char *FilePath,int *len);
-extern char * load_xusb(char *FilePath,int *len);
+extern unsigned char* load_ddr(char *FilePath,unsigned int *len);
+extern unsigned char * load_xusb(char *FilePath,int *len);
 
 
 /* NuclibUsb.c */

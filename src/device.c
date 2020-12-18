@@ -29,7 +29,7 @@ int XUSBtoDevice(unsigned char *buf,unsigned int len)
 	XBINHEAD *xbinhead;
 	unsigned int scnt,rcnt,file_len,ack,total;
 	unsigned char *pbuf;
-	int bResult,pos;
+	int bResult;
 	xbinhead=(XBINHEAD *)buf;
 	pbuf=buf+sizeof(XBINHEAD);
 	file_len=len-sizeof(XBINHEAD);
@@ -54,9 +54,9 @@ int XUSBtoDevice(unsigned char *buf,unsigned int len)
 		if(bResult<0)	return -1;
 		pbuf+=BUF_SIZE;
 		total+=BUF_SIZE;
-		pos=(int)(((float)(((float)total/(float)file_len))*100));
 		bResult=NUC_ReadPipe(0,(UCHAR *)&ack,4);
-		if(bResult<0 || ack!=BUF_SIZE) {
+		
+        if(bResult<0 || ack!=BUF_SIZE) {
 			return -1;
 		}
 		scnt--;

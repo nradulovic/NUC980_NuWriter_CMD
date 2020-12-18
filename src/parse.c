@@ -2,6 +2,7 @@
 #include "common.h"
 #include <unistd.h> /* sleep */
 #include <string.h>
+
 char * read_xusb_name(char * FilePath)
 {
 
@@ -25,7 +26,8 @@ char * read_xusb_name(char * FilePath)
 		cvt[(unsigned long)ptmp-(unsigned long)tmp]='\0';
 		address=strtoul(cvt,NULL,0);
 
-		strncpy(cvt,++ptmp,strlen(ptmp));
+        ++ptmp;
+		strncpy(cvt,ptmp,strlen(ptmp));
 		cvt[strlen(ptmp)]='\0';
 		value=strtoul(cvt,NULL,0);
 
@@ -49,14 +51,15 @@ char * read_xusb_name(char * FilePath)
 	fclose(fp);
 	return (char *)name;
 }
+
 int init_xusb(const char * data_path)
 {
 
 	int ret=0;
-	char DDR[256];
 	char XUSB[256];
-	int bResult,dlen,xlen;
+	int bResult,xlen;
 	unsigned char *dbuf=NULL,*xbuf=NULL;
+	unsigned int dlen;
 
 	ret=NUC_OpenUsb();
 	if(ret<0) return -1;
@@ -92,7 +95,7 @@ int init_xusb(const char * data_path)
 	}
 	NUC_CloseUsb();
 	sleep(1);
-	while(get_device_num_with_vid_pid(ctx,USB_VENDOR_ID, USB_PRODUCT_ID)!=dev_count) {
+	while (get_device_num_with_vid_pid(ctx,USB_VENDOR_ID, USB_PRODUCT_ID) != dev_count) {
 		sleep(1);
 	}
 	ret=NUC_OpenUsb();

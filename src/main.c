@@ -54,7 +54,7 @@ struct ParsingIniResult  ParsingIni(const char * inifile)
 	MODE_T * mode;
 	char str[256],str2[100];
 	long n,IsYes;
-	int i,idx;
+	int idx;
 
 	nudata.user_def = (INFO_T *)malloc(sizeof(INFO_T));
 	
@@ -131,7 +131,7 @@ struct ParsingIniResult  ParsingIni(const char * inifile)
             NW__RESULT__SET(&result, 0, 1);
 			return result;
 		}
-		for(i=0; i<nudata.image_num; i++) {
+		for(unsigned int i=0; i<nudata.image_num; i++) {
 			sprintf(str2,"image%d_type",i);
 			n = ini_gets(ModeT[nudata.mode.id].pName, str2, "dummy", str, sizearray(str), inifile);
 			mode = (MODE_T *)TypeT;
@@ -177,7 +177,7 @@ struct ParsingIniResult  ParsingIni(const char * inifile)
 		}
 
 		MSG_DEBUG("nudata.image_num=%d\n",nudata.image_num);
-		for(i=0; i<nudata.image_num; i++) {
+		for(unsigned int i=0; i<nudata.image_num; i++) {
 			MSG_DEBUG("image%d_type=%d\n",i,nudata.image[i].image_type);
 			MSG_DEBUG("image%d_path=%s\n",i,nudata.image[i].image_path);
 			MSG_DEBUG("image%d_exe_addr=0x%08x\n",i,nudata.image[i].image_exe_addr);
@@ -320,7 +320,6 @@ struct ParsingIniResult  ParsingIni(const char * inifile)
 int main(int argc, char **argv)
 {
 	/* Initial */
-	char *path;
 	int cmd_opt = 0;
 
 	csg_usb_index = 1;
@@ -357,8 +356,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if(argc>1)
+	if(argc>1) {
 		MSG_DEBUG("argv[1]=%s\n",argv[1]);
+    }
 
 	if( access( argv[1], F_OK ) == -1 ) {
 		fprintf(stderr,"Cannot access %s ini file\n",argv[1]);

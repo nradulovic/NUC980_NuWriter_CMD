@@ -34,7 +34,6 @@ void show_progressbar(int pos)
 
 unsigned char *GetDDRFormat(unsigned int *len)
 {
-	char DDR[256];
 	unsigned char *dbuf,*ddrbuf;
 	unsigned int dlen;
 
@@ -55,8 +54,7 @@ unsigned char *GetDDRFormat(unsigned int *len)
 
 int UXmodem_PackImage(void)
 {
-	int storageSize=64*1024;
-	int idx,i,tmp;
+	int tmp;
 	PACK_HEAD pack_head;
 	FILE* wfp,*rfp;
 	int total=0;
@@ -66,7 +64,7 @@ int UXmodem_PackImage(void)
 		printf("File Open error\n");
 		return -1;
 	}
-	for(idx=0; idx<nudata.image_num; idx++) {
+	for(unsigned int idx=0; idx<nudata.image_num; idx++) {
 		rfp=fopen(nudata.image[idx].image_path, "rb");
 		if(rfp==NULL) {
 			printf("Open read File Error(-w %s) \n",nudata.image[idx].image_path);
@@ -90,7 +88,7 @@ int UXmodem_PackImage(void)
 
 	PACK_CHILD_HEAD child;
 	unsigned int len;
-	for(idx=0; idx<nudata.image_num; idx++) {
+	for(unsigned int idx=0; idx<nudata.image_num; idx++) {
 
 		//if(*itemType!=PMTP) {
 		if(1) {
@@ -108,7 +106,7 @@ int UXmodem_PackImage(void)
 			char magic[4]= {' ','T','V','N'};
 			switch(nudata.image[idx].image_type) {
 			case LOADER: {
-				int ddrlen;
+				unsigned int ddrlen;
 				unsigned char *ddrbuf;
 
 				ddrbuf=GetDDRFormat(&ddrlen);
@@ -455,14 +453,13 @@ EXIT:
 
 int UXmodem_Pack(void)
 {
-	int idx=0;
 	FILE *fp;
 	int i;
 	int bResult,pos;
 	unsigned int scnt,rcnt,file_len,ack,total;
 	unsigned char *pbuf;
 	unsigned int magic;
-	char* lpBuffer;
+	unsigned char* lpBuffer;
 	PACK_HEAD *ppackhead;
 	PACK_CHILD_HEAD child;
 	int posnum,burn_pos;
@@ -470,9 +467,9 @@ int UXmodem_Pack(void)
 	NORBOOT_MMC_HEAD *m_fhead;
 	m_fhead=malloc(sizeof(NORBOOT_MMC_HEAD));
 
-	fp=fopen(nudata.image[idx].image_path, "rb");
+	fp=fopen(nudata.image[0].image_path, "rb");
 	if(fp==NULL) {
-		printf("Open read File Error(-w %s) \n",nudata.image[idx].image_path);
+		printf("Open read File Error(-w %s) \n",nudata.image[0].image_path);
 		return -1;
 	}
 	fread((unsigned char *)&magic,4,1,fp);
@@ -495,7 +492,7 @@ int UXmodem_Pack(void)
 	memset((unsigned char *)m_fhead,0,sizeof(NORBOOT_MMC_HEAD));
 	if(nudata.mode.id!=MODE_SD) {
 		((NORBOOT_NAND_HEAD *)m_fhead)->flag=PACK_ACTION;
-		((NORBOOT_NAND_HEAD *)m_fhead)->type=nudata.image[idx].image_type;
+		((NORBOOT_NAND_HEAD *)m_fhead)->type=nudata.image[0].image_type;
 		((NORBOOT_NAND_HEAD *)m_fhead)->initSize=0;
 		((NORBOOT_NAND_HEAD *)m_fhead)->filelen=file_len;
 		bResult=NUC_WritePipe(0,(UCHAR *)m_fhead, sizeof(NORBOOT_NAND_HEAD));
@@ -503,7 +500,7 @@ int UXmodem_Pack(void)
 		fread(lpBuffer,1,((NORBOOT_NAND_HEAD *)m_fhead)->filelen,fp);
 	} else {
 		((NORBOOT_MMC_HEAD *)m_fhead)->flag=PACK_ACTION;
-		((NORBOOT_MMC_HEAD *)m_fhead)->type=nudata.image[idx].image_type;
+		((NORBOOT_MMC_HEAD *)m_fhead)->type=nudata.image[0].image_type;
 		((NORBOOT_MMC_HEAD *)m_fhead)->initSize=0;
 		((NORBOOT_MMC_HEAD *)m_fhead)->filelen=file_len;
 		bResult=NUC_WritePipe(0,(UCHAR *)m_fhead, sizeof(NORBOOT_MMC_HEAD));
@@ -518,7 +515,7 @@ int UXmodem_Pack(void)
 	ppackhead=(PACK_HEAD *)lpBuffer;
 	bResult=NUC_WritePipe(0,(UCHAR *)pbuf, sizeof(PACK_HEAD));
 	bResult=NUC_ReadPipe(0,(UCHAR *)&ack,4);
-	total+= sizeof(PACK_HEAD);
+	total = sizeof(PACK_HEAD);
 	pbuf+= sizeof(PACK_HEAD);
 	posnum=0;
 	for(i=0; i<(int)(ppackhead->num); i++) {
@@ -590,16 +587,14 @@ EXIT:
 
 int UXmodem_NAND(void)
 {
-	int idx=0;
 	FILE *fp;
 	int bResult,pos;
 	unsigned int scnt,rcnt,file_len,ack,total;
-	unsigned char *pbuf,buf[BUF_SIZE];
+	unsigned char *pbuf;
 	NORBOOT_NAND_HEAD *m_fhead;
-	char DDR[256];
 	unsigned char *ddrbuf=NULL;
 	unsigned int ddrlen;
-	char* lpBuffer;
+	unsigned char* lpBuffer;
 	int blockNum;
 
 	m_fhead=malloc(sizeof(NORBOOT_NAND_HEAD));
@@ -611,13 +606,12 @@ int UXmodem_NAND(void)
 	NUC_SetType(0,NAND);
 
 
-	if(nudata.image[idx].image_type==PACK) {
+	if(nudata.image[0].image_type==PACK) {
 		if(UXmodem_Pack()<0) goto EXIT;
 	} else {
 
 		if(nudata.run==RUN_READ) {
 			unsigned char temp[BUF_SIZE];
-			FILE* tempfp;
 			//-----------------------------------
 			fp=fopen(nudata.read->path,"w+b");
 			if(fp==NULL) {
@@ -679,7 +673,7 @@ int UXmodem_NAND(void)
 		}
 
 		if(nudata.run==RUN_PROGRAM || nudata.run==RUN_PROGRAM_VERIFY ) { //Burn Image
-			for(idx=0; idx<nudata.image_num; idx++) {
+			for(unsigned int idx=0; idx<nudata.image_num; idx++) {
 				if(idx>0) {
 					if(NUC_OpenUsb()<0) return -1;
 					NUC_SetType(0,NAND);
@@ -937,16 +931,14 @@ EXIT:
 
 int UXmodem_SPINAND(void)
 {
-	int idx;
 	FILE *fp;
 	int bResult,pos;
 	unsigned int scnt,rcnt,file_len,ack,total;
-	unsigned char *pbuf,buf[BUF_SIZE];
+	unsigned char *pbuf;
 	NORBOOT_NAND_HEAD *m_fhead;
-	char DDR[256];
 	unsigned char *ddrbuf=NULL;
 	unsigned int ddrlen;
-	char* lpBuffer;
+	unsigned char* lpBuffer;
 	int blockNum;
 	m_fhead=malloc(sizeof(NORBOOT_NAND_HEAD));
 
@@ -959,7 +951,6 @@ int UXmodem_SPINAND(void)
 
 		if(nudata.run==RUN_READ) {
 			unsigned char temp[BUF_SIZE];
-			FILE* tempfp;
 			//-----------------------------------
 			fp=fopen(nudata.read->path,"w+b");
 			if(fp==NULL) {
@@ -1021,7 +1012,7 @@ int UXmodem_SPINAND(void)
 		}
 
 		if(nudata.run==RUN_PROGRAM || nudata.run==RUN_PROGRAM_VERIFY) { //Burn Image
-			for(idx=0; idx<nudata.image_num; idx++) {
+			for(unsigned int idx=0; idx<nudata.image_num; idx++) {
 				if(idx>0) {
 					if(NUC_OpenUsb()<0) return -1;
 					NUC_SetType(0,SPINAND);
@@ -1175,7 +1166,7 @@ int UXmodem_SPINAND(void)
 					m_fhead->flag=VERIFY_ACTION;
 					NUC_WritePipe(0,(unsigned char*)m_fhead,sizeof(NORBOOT_NAND_HEAD));
 					NUC_ReadPipe(0,(unsigned char *)&ack,sizeof(unsigned int));
-					pbuf = lpBuffer+m_fhead->initSize;
+					pbuf = lpBuffer + m_fhead->initSize;
 					scnt=(file_len-m_fhead->initSize)/BUF_SIZE;
 					rcnt=(file_len-m_fhead->initSize)%BUF_SIZE;
 					total=0;
@@ -1288,16 +1279,14 @@ EXIT:
 
 int UXmodem_SPI(void)
 {
-	int idx;
 	FILE *fp;
 	int bResult,pos;
 	unsigned int scnt,rcnt,file_len,ack,total;
-	unsigned char *pbuf,buf[BUF_SIZE];
+	unsigned char *pbuf;
 	NORBOOT_NAND_HEAD *m_fhead;
-	char DDR[256];
 	unsigned char *ddrbuf=NULL;
 	unsigned int ddrlen;
-	char* lpBuffer;
+	unsigned char* lpBuffer;
 	unsigned int burn_pos;
 	m_fhead=malloc(sizeof(NORBOOT_NAND_HEAD));
 
@@ -1310,7 +1299,6 @@ int UXmodem_SPI(void)
 
 		if(nudata.run==RUN_READ) {
 			unsigned char temp[BUF_SIZE];
-			FILE* tempfp;
 			//-----------------------------------
 			fp=fopen(nudata.read->path,"w+b");
 			if(fp==NULL) {
@@ -1372,7 +1360,7 @@ int UXmodem_SPI(void)
 		}
 
 		if(nudata.run==RUN_PROGRAM || nudata.run==RUN_PROGRAM_VERIFY) { //Burn Image
-			for(idx=0; idx<nudata.image_num; idx++) {
+			for(unsigned int idx=0; idx < nudata.image_num; idx++) {
 				if(idx>0) {
 					if(NUC_OpenUsb()<0) return -1;
 					NUC_SetType(0,SPI);
@@ -1530,7 +1518,7 @@ int UXmodem_SPI(void)
 					m_fhead->flag=VERIFY_ACTION;
 					NUC_WritePipe(0,(unsigned char*)m_fhead,sizeof(NORBOOT_NAND_HEAD));
 					NUC_ReadPipe(0,(unsigned char *)&ack,sizeof(unsigned int));
-					pbuf = lpBuffer+m_fhead->initSize;
+					pbuf = lpBuffer + m_fhead->initSize;
 					scnt=(file_len-m_fhead->initSize)/BUF_SIZE;
 					rcnt=(file_len-m_fhead->initSize)%BUF_SIZE;
 					total=0;
@@ -1642,16 +1630,14 @@ EXIT:
 }
 int UXmodem_SD(void)
 {
-	int idx;
 	FILE *fp;
 	int bResult,pos;
 	unsigned int scnt,rcnt,file_len,ack,total;
-	unsigned char *pbuf,buf[BUF_SIZE];
+	unsigned char *pbuf;
 	NORBOOT_MMC_HEAD *m_fhead;
-	char DDR[256];
 	unsigned char *ddrbuf=NULL;
 	unsigned int ddrlen;
-	char* lpBuffer;
+	unsigned char* lpBuffer;
 	int blockNum;
 	m_fhead=malloc(sizeof(NORBOOT_MMC_HEAD));
 	m_fhead->ReserveSize = mmc_head.ReserveSize;
@@ -1668,7 +1654,7 @@ int UXmodem_SD(void)
 	if(NUC_OpenUsb()<0) return -1;
 	NUC_SetType(0,MMC);
 
-	if(nudata.image[idx].image_type==PACK) {
+	if(nudata.image[0].image_type==PACK) {
 		if(UXmodem_Pack()<0) goto EXIT;
 	} else {
 		if(nudata.run==RUN_FORMAT) {
@@ -1722,7 +1708,6 @@ int UXmodem_SD(void)
 
 		if(nudata.run==RUN_READ) {
 			unsigned char temp[BUF_SIZE];
-			FILE* tempfp;
 			//-----------------------------------
 			fp=fopen(nudata.read->path,"w+b");
 			if(fp==NULL) {
@@ -1783,9 +1768,8 @@ int UXmodem_SD(void)
 		}
 
 		if(nudata.run==RUN_PROGRAM || nudata.run==RUN_PROGRAM_VERIFY) { //Burn Image
-			for(idx=0; idx<nudata.image_num; idx++) {
+			for(unsigned int idx=0; idx<nudata.image_num; idx++) {
 				if(idx>0) {
-					int i;
 					if(NUC_OpenUsb()<0) return -1;
 					NUC_SetType(0,MMC);
 					usleep(10);
@@ -1815,7 +1799,7 @@ int UXmodem_SD(void)
 					m_fhead->no=0;
 					m_fhead->execaddr = 0x200;
 					m_fhead->flashoffset = nudata.image[idx].image_start_offset;
-					lpBuffer = (unsigned char *)malloc(sizeof(unsigned char)*file_len); //read file to buffer
+					lpBuffer = malloc(sizeof(unsigned char)*file_len); //read file to buffer
 					memset(lpBuffer,0xff,file_len);
 					((NORBOOT_MMC_HEAD *)m_fhead)->macaddr[7]=0;
 					m_fhead->type=nudata.image[idx].image_type;
@@ -1833,7 +1817,7 @@ int UXmodem_SD(void)
 						printf("The environment file size is less then 64KB\n");
 						goto EXIT;
 					}
-					lpBuffer = (unsigned char *)malloc(sizeof(unsigned char)*0x10000); //read file to buffer
+					lpBuffer = malloc(sizeof(unsigned char)*0x10000); //read file to buffer
 					memset(lpBuffer,0x00,0x10000);
 
 					((NORBOOT_NAND_HEAD *)m_fhead)->macaddr[7]=0;
@@ -1873,7 +1857,7 @@ int UXmodem_SD(void)
 					ddrbuf=GetDDRFormat(&ddrlen);
 					file_len=file_len+ddrlen+32;
 					m_fhead->initSize=ddrlen;
-					lpBuffer = (unsigned char *)malloc(sizeof(unsigned char)*file_len);
+					lpBuffer = malloc(sizeof(unsigned char)*file_len);
 					memset(lpBuffer,0xff,file_len);
 					m_fhead->macaddr[7]=0;
 
@@ -1930,7 +1914,7 @@ int UXmodem_SD(void)
 						file_len = file_len - 32;
 					NUC_WritePipe(0,(unsigned char*)m_fhead,sizeof(NORBOOT_MMC_HEAD));
 					NUC_ReadPipe(0,(unsigned char *)&ack,sizeof(unsigned int));
-					pbuf = lpBuffer+m_fhead->initSize;
+					pbuf = lpBuffer + m_fhead->initSize;
 					scnt=(file_len-m_fhead->initSize)/BUF_SIZE;
 					rcnt=(file_len-m_fhead->initSize)%BUF_SIZE;
 					total=0;

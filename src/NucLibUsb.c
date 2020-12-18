@@ -42,7 +42,12 @@ int NUC_ReadPipe(int id,unsigned char *buf,int len)
 		return 0;
 	}
 }
-int NUC_WritePipe(int id,unsigned char *buf,int len)
+
+int
+NUC_WritePipe(
+		int id,
+		unsigned char *buf,
+		int len)
 {
 
 	int ret;
@@ -132,7 +137,7 @@ int get_device_num_with_vid_pid(libusb_context *ctx,
 	ssize_t cnt;
 	libusb_device *dev;
 	int i=0,j=0,count=0;
-	libusb_device_handle *dev_handle;
+
 	cnt = libusb_get_device_list(NULL,&devs);
 	if(cnt < 0) {
 		printf("get device list failed\n");
@@ -163,29 +168,26 @@ int get_device_num_with_vid_pid(libusb_context *ctx,
 	}
 	return count;
 }
-libusb_device_handle * libusb_open_device_with_vid_pid_index
-(
-    libusb_context *ctx,
-    unsigned int vendor_id,
-    unsigned int product_id,
-    int index
-)
+
+libusb_device_handle *
+libusb_open_device_with_vid_pid_index(
+		libusb_context *ctx,
+		unsigned int vendor_id,
+		unsigned int product_id,
+		unsigned int index)
 {
-	libusb_device **devs;
-	ssize_t cnt;
-	libusb_device *dev;
-	int i=0,j=0,count=0;
+	int r;
 	libusb_device_handle *dev_handle;
 
-	if(index > dev_count) {
+	if (index > dev_count) {
 		printf("index > count");
 		return NULL;
 	}
 	MSG_DEBUG("usb port is ");
 	print_port_numbers(dev_arr[index-1]);
 	MSG_DEBUG("\r\n");
-	int r;
-	r = libusb_open(dev_arr[index-1],&dev_handle);
+
+	r = libusb_open(dev_arr[index-1], &dev_handle);
 	if(r !=  0 ) {
 		MSG_DEBUG("r = %d\r\n",r);
 		return NULL;
@@ -195,14 +197,12 @@ libusb_device_handle * libusb_open_device_with_vid_pid_index
 }
 int NUC_OpenUsb(void)
 {
-	int ret=0;
 	if(handle!=NULL) return 0;
 	//Open Device with VendorID and ProductID
 	handle = libusb_open_device_with_vid_pid_index(ctx,
 	         USB_VENDOR_ID, USB_PRODUCT_ID,csg_usb_index);
 	if (!handle) {
 		perror("device not found\n");
-		ret=-1;
 		libusb_exit(NULL);
 		return -1;
 	}

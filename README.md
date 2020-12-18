@@ -15,7 +15,7 @@ Compilation
     cd NUC980_NuWriter_CMD
     mkdir out
     cd out
-    cmake ../build
+    cmake <path_to_source>
     make
     make install
 
@@ -24,7 +24,7 @@ Compilation
     From out directory execute the following script to flash u-boot image to
     nand:
 
-    nuwriter ../scripts/uboot_nand_write.ini
+    nuwriter <path_to_source>/scripts/uboot_nand_write.ini
 
 
 
