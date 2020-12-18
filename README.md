@@ -4,7 +4,7 @@ The NuBurner Command Tool is a linux console application consisting of
 functions to access storage (eg. DRAM, NAND, SPINOR, SPINAND, SD) in NUC980 
 family of processors.
 
-## NuWriter command tool Installation Steps
+## Installation Steps
 
 On Debian or Ubuntu system first install the dependencies:
 
@@ -19,9 +19,12 @@ Compilation
     make
     make install
 
-## NuWriter command tool examples
+## Examples
 
-    ./nuwriter ../scripts/uboot_nand_write.ini
+    From out directory execute the following script to flash u-boot image to
+    nand:
+
+    nuwriter ../scripts/uboot_nand_write.ini
 
 
 
